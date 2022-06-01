@@ -4,6 +4,8 @@ import seaborn as sns
 import numpy as np
 from matplotlib.collections import LineCollection
 import pandas as pd
+from matplotlib import colors as mcolors
+
 
 def plot_iEEG_data(data, t, linecolor='k'):
     """"
@@ -15,14 +17,18 @@ def plot_iEEG_data(data, t, linecolor='k'):
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Input
         data: iEEG data in pandas.DataFrame or numpy.array
-        time: time array 
+        time: time array
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Output:
         Returns figure handle
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     """
+    h, w = 10, 15
+
 
     fig, ax = plt.subplots()
+
+    # fig.set_size_inches(15, 10)
 
     # Show only bottom and left axis for visibility, format tick labels
     ax.spines['right'].set_visible(False)
@@ -34,9 +40,9 @@ def plot_iEEG_data(data, t, linecolor='k'):
     ticklocs = []
     ax.set_xlim(t[0], t[-1])
     dmin = data.min().min()
-    dmax = data.max().min()
+    dmax = data.max().max()
 
-    dr = (dmax - dmin) * 0.8 # Crowd them a bit.
+    dr = (dmax - dmin) # Crowd them a bit.
 
     y0 = dmin
     y1 = (n_rows - 1) * dr + dmax
@@ -45,26 +51,34 @@ def plot_iEEG_data(data, t, linecolor='k'):
     segs = []
     for i in range(n_rows):
         if isinstance(data, pd.DataFrame):
-            segs.append(np.column_stack((t, data.iloc[:,i])))
+            segs.append(np.column_stack((t, data.iloc[:, i])))
         elif isinstance(data, np.ndarray):
-            segs.append(np.column_stack((t, data[:,i])))
+            segs.append(np.column_stack((t, data[:, i])))
         else:
             print("Data is not in valid format")
 
-    for i in reversed(range(n_rows)):
+    for i in range(n_rows):
         ticklocs.append(i * dr)
 
     offsets = np.zeros((n_rows, 2), dtype=float)
     offsets[:, 1] = ticklocs
 
-    lines = LineCollection(segs, offsets=offsets, transOffset=None, colors=linecolor, linewidth=0.2)
+
+
+
+
+    colors = [mcolors.to_rgba(c)
+              for c in plt.rcParams['axes.prop_cycle'].by_key()['color']]
+
+    lines = LineCollection(segs, offsets=offsets/fig.dpi, transOffset=None, colors='k', linewidth=0.2)
     ax.add_collection(lines)
 
     # # Set the yticks to use axes coordinates on the y axis
     ax.set_yticks(ticklocs)
     if isinstance(data, pd.DataFrame):
         ax.set_yticklabels(data.columns)
-
     ax.set_xlabel('Time (s)')
-    return fig, ax
 
+    # ax.set_title(iEEG_filename)
+    # fig.show()
+    return fig, ax

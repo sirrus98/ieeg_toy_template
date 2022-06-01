@@ -69,7 +69,9 @@ def get_iEEG_data(username, password, iEEG_filename, start_time_usec, stop_time_
     ds = s.open_dataset(iEEG_filename)
     all_channel_labels = ds.get_channel_labels()
 
-    assert((select_electrodes is not None) or (ignore_electrodes is not None))
+    channel_ids = [i for i in range(len(all_channel_labels))]
+    channel_names = [all_channel_labels[e] for e in channel_ids]
+    # assert((select_electrodes is not None) or (ignore_electrodes is not None))
 
 
     if select_electrodes is not None:
@@ -81,8 +83,8 @@ def get_iEEG_data(username, password, iEEG_filename, start_time_usec, stop_time_
             channel_names = select_electrodes
         else:
             print("Electrodes not given as a list of ints or strings")
-
-    # if ignore_electrodes:
+    #
+    # if ignore_electrodes is not None:
     #     if isinstance(ignore_electrodes[0], int):
     #         channel_ids = [i for i in range(len((all_channel_labels)) if i not in ignore_electrodes]
     #         channel_names = [all_channel_labels[e] for e in channel_ids]
@@ -91,9 +93,9 @@ def get_iEEG_data(username, password, iEEG_filename, start_time_usec, stop_time_
     #         channel_names = select_electrodes
     #     else:
     #         print("Electrodes not given as a list of ints or strings")
-
-        # channel_ids = [i for i, e in enumerate(all_channel_labels) if e not in ignore_electrodes]
-        # channel_names = [e for e in all_channel_labels if e not in ignore_electrodes]
+    #
+    #     channel_ids = [i for i, e in enumerate(all_channel_labels) if e not in ignore_electrodes]
+    #     channel_names = [e for e in all_channel_labels if e not in ignore_electrodes]
     try:
         data = ds.get_data(start_time_usec, duration, channel_ids)
     except:
