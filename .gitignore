@@ -130,3 +130,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+data/non_seizure/
+data/non_seizure_time/
+data/seizure/
+data/seizure_time/

@@ -4,7 +4,6 @@ import seaborn as sns
 import numpy as np
 from matplotlib.collections import LineCollection
 import pandas as pd
-from matplotlib import colors as mcolors
 
 
 def plot_iEEG_data(data, t, linecolor='k'):
@@ -24,18 +23,15 @@ def plot_iEEG_data(data, t, linecolor='k'):
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     """
     n_rows = data.shape[1]
-    h,w =  n_rows*1.5, 15
+    h, w = n_rows * 1.5, 15
     plt.figure(figsize=(w, h))
 
     ax = plt.axes()
 
+    dmin = np.average(data.min().array)
+    dmax = np.average(data.max().array)
 
-
-    ticklocs = []
-    dmin = data.min().min()
-    dmax = data.max().max()
-
-    dr = (dmax - dmin)*0.7  # Crowd them a bit.
+    dr = (dmax - dmin)  # Crowd them a bit.
 
     segs = []
     for i in range(n_rows):
@@ -46,18 +42,21 @@ def plot_iEEG_data(data, t, linecolor='k'):
         else:
             print("Data is not in valid format")
 
-    offsets = (np.arange(n_rows)*dr)[::-1]
+    offsets = (np.arange(n_rows) * dr)[::-1]
 
     lines = np.array(segs)
 
-    pltlines = lines[:, :, 1] + offsets[:, np.newaxis]
+    mean = np.mean(lines[:, :, 1], axis=1)
 
-    plt.plot(lines[:, :, 0].T, pltlines.T, 'k', linewidth = 0.2)
+    pltlines = lines[:, :, 1] - mean[:, np.newaxis] + offsets[:, np.newaxis]
+
+    plt.plot(lines[:, :, 0].T, pltlines.T, 'k', linewidth=0.2)
 
     # # Set the yticks to use axes coordinates on the y axis
     plt.yticks(offsets)
     if isinstance(data, pd.DataFrame):
         ax.set_yticklabels(data.columns)
     plt.xlabel('Time (s)')
+    plt.title('dr = %f' %dr)
 
     plt.show()
