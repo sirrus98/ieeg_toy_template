@@ -30,35 +30,36 @@ def freqFeatures(filtered_window, fs=1000):
         features (channels x num_features): the features calculated on each channel for the window
     """
     features = []
-    for channel in filtered_window.T:
-        avg_voltage = np.mean(channel)
+    for channel in filtered_window:
+        avg_voltage = np.mean(channel, axis=0)
 
         # Fourier transform, take real component, take absolute value, and convert to
         # decibels
         # pad to 1000 points to get 1 Hz resolution
-        p = 20 * np.log10(np.abs(np.fft.rfft(channel, 1000)) + 0.001)  # create power spectrum
+        p = 20 * np.log10(np.abs(np.fft.rfft(channel, axis=0)) + 0.001)  # create power spectrum
         f = np.linspace(0, fs / 2, len(p))  # create corresponding frequencies
 
-        avPow = np.mean(p)  # average power
+        avPow = np.mean(p, axis=0)  # average power
 
-        # delta = np.mean(p[findInd(0.5):findInd(4) + 1])  # delta band
-        # theta = np.mean(p[findInd(4):findInd(8) + 1])  # theta band
-        alpha = np.mean(p[findInd(8, fs, len(p)):findInd(14, fs, len(p)) + 1])  # alpha band
+        alpha = np.mean(p[findInd(8, fs, len(p)):findInd(14, fs, len(p)) + 1], axis=0)  # alpha band
         # mu = np.mean(p[findInd(8):findInd(13)] + 1)  # mu band, apparently tied to movement
-        beta = np.mean(p[findInd(14, fs, len(p)):findInd(30, fs, len(p)) + 1])  # beta band
-        low_gamma = np.mean(p[findInd(30, fs, len(p)):findInd(60, fs, len(p)) + 1])  # gamma band ish
-        gamma = np.mean(p[findInd(60, fs, len(p)):findInd(100, fs, len(p)) + 1])
-        high_gamma = np.mean(p[findInd(100, fs, len(p)):findInd(200, fs, len(p)) + 1])
-        f1 = np.mean(p[findInd(5, fs, len(p)):findInd(15, fs, len(p)) + 1])  # freq band 1
-        f2 = np.mean(p[findInd(20, fs, len(p)):findInd(25, fs, len(p)) + 1])  # freq band 2
-        f3 = np.mean(p[findInd(75, fs, len(p)):findInd(115, fs, len(p)) + 1])  # freq band 3
-        f4 =  np.mean(p[findInd(125, fs, len(p)):findInd(160, fs, len(p)) + 1])  # freq band 4
-        f5 = np.mean(p[findInd(160, fs, len(p)):findInd(175, fs, len(p)) + 1])  # freq band 5
+        beta = np.mean(p[findInd(14, fs, len(p)):findInd(30, fs, len(p)) + 1], axis=0)  # beta band
+        low_gamma = np.mean(p[findInd(30, fs, len(p)):findInd(60, fs, len(p)) + 1], axis=0)  # gamma band ish
+        gamma = np.mean(p[findInd(60, fs, len(p)):findInd(100, fs, len(p)) + 1], axis=0)
+        high_gamma = np.mean(p[findInd(100, fs, len(p)):findInd(200, fs, len(p)) + 1], axis=0)
+        # f1 = np.mean(p[findInd(5, fs, len(p)):findInd(15, fs, len(p)) + 1])  # freq band 1
+        # f2 = np.mean(p[findInd(20, fs, len(p)):findInd(25, fs, len(p)) + 1])  # freq band 2
+        # f3 = np.mean(p[findInd(75, fs, len(p)):findInd(115, fs, len(p)) + 1])  # freq band 3
+        # f4 = np.mean(p[findInd(125, fs, len(p)):findInd(160, fs, len(p)) + 1])  # freq band 4
+        # f5 = np.mean(p[findInd(160, fs, len(p)):findInd(175, fs, len(p)) + 1])  # freq band 5
 
         # From what I found, f1,f2, f3, f4, f5 are best, along with avg_voltage. Included the others just in case.
-        features.append([avg_voltage, alpha, beta, low_gamma, gamma, high_gamma, f1, f2, f3, f4, f5])
+        features.append([avPow, avg_voltage, alpha, beta, low_gamma, gamma, high_gamma])
 
-    return np.array(features).flatten()
+        ret = np.array(features)
+
+
+    return np.array(features)
 
 
 def calculate_line_length(X):
@@ -69,8 +70,10 @@ def calculate_line_length(X):
     :return: line length
     :rtype: float
     """
-
-    return np.sum([abs(X[index + 1] - X[index]) for index in range(len(X) - 1)])
+    l = np.sum(np.abs(np.diff(X, axis=1)), axis=1)
+    if np.isnan(l).any() or np.isinf(l).any():
+        print('nan of inf')
+    return l
 
 
 def calculate_area(X):
@@ -81,7 +84,7 @@ def calculate_area(X):
     :return: area
     :rtype: float
     """
-    return np.sum(np.abs(X))
+    return np.sum(np.abs(X), axis=1)
 
 
 def calculate_energy(X):
@@ -92,7 +95,7 @@ def calculate_energy(X):
     :return: energy
     :rtype: float
     """
-    return np.sum(np.square(X))
+    return np.sum(np.square(X), axis=1)
 
 
 def calculate_zero_crossings(X):
@@ -125,7 +128,7 @@ def avg_frequency_mag(channel):
     :return: average frequency mag
     :rtype: float
     """
-    return np.mean(np.abs(fft(channel)))
+    return np.mean(np.abs(fft(channel)), axis=1)
 
 
 def hjorthActivity(data):
@@ -142,6 +145,7 @@ def hjorthMobility(data):
 
 def hjorthComplexity(data):
     return hjorthMobility(np.gradient(data, axis=1)) / hjorthMobility(data)
+
 
 # TODO: Normalization
 

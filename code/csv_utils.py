@@ -54,3 +54,10 @@ def dump_pickle(file, path):
     if isinstance(file[0], np.ndarray):
         for i in tqdm(range(len(file))):
             file[i].dump(path + str(i) + '.pkl')
+
+def read_pickle(path, num):
+    data_list = []
+    for i in range(num):
+        clip = pd.read_pickle(path + str(i) + '.pkl')
+        data_list.append(clip)
+    return data_list
