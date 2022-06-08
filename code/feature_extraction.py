@@ -71,8 +71,6 @@ def calculate_line_length(X):
     :rtype: float
     """
     l = np.sum(np.abs(np.diff(X, axis=1)), axis=1)
-    if np.isnan(l).any() or np.isinf(l).any():
-        print('nan of inf')
     return l
 
 
